@@ -1,4 +1,4 @@
-var request = require('request')
+var request = require('request-promise')
 var cheerio = require('cheerio')
 var fs = require('fs')
 
@@ -21,9 +21,9 @@ request('http://www.terrazero.com.br/category/comicpod-podcast-quadrinhos/', fun
             var $ = cheerio.load(body)
 
             var tituloPodcast = $('.entry-title').first().text()
-            
+
             var descPodcast = $('.entry-content p').first().text()
-            
+
             var linkPodcast = $('.powerpress_links_mp3').first().find("a").first().attr('href')
 
             objPodcast = {
@@ -31,12 +31,15 @@ request('http://www.terrazero.com.br/category/comicpod-podcast-quadrinhos/', fun
                 "descricao": descPodcast,
                 "link": linkPodcast
             }
-            
+
             arrayResponse.push(objPodcast)
 
+
+        }).then((res) => {
+            console.log(arrayResponse);
         })
 
-        console.log(arrayResponse);
+        // console.log(arrayResponse);
 
     })
 
@@ -52,17 +55,12 @@ request('http://www.terrazero.com.br/category/comicpod-podcast-quadrinhos/', fun
     //         var $ = cheerio.load(body)
 
     //         var tituloPodcast = $('.entry-title').first().text()
-            
+
     //         var tituloPodcast = $('.entry-title').first().text()
 
     //         console.log(`Titulo: ${tituloPodcast}`)
 
     //     })
 
-    //     // 
-
-
-
-
-
+    //     //
 })
