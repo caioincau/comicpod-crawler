@@ -1,66 +1,39 @@
-var request = require('request-promise')
-var cheerio = require('cheerio')
-var fs = require('fs')
+let request = require('request-promise')
+let cheerio = require('cheerio')
+let fs = require('fs')
 
-request('http://www.terrazero.com.br/category/comicpod-podcast-quadrinhos/', function(err, res, body) {
+
+request('http://www.terrazero.com.br/category/comicpod-podcast-quadrinhos/', async function(err, res, body) {
     if (err) console.log(`Erro: ${err}`)
 
-    var $ = cheerio.load(body)
+    let $ = cheerio.load(body)
 
-    var arrayResponse = []
+    let arrayResponse = []
 
-    var objPodcast = {}
+    let objPodcast = {}
+    let posts = $('.herald-posts article')
 
-    $('.herald-posts article').each(function() {
+    const promises = posts.map((index, item) => {
+        const postPodcast = $(item).find('a').attr('href')
+        return request(postPodcast)
+    }).get()
 
-        var postPodcast = $(this).find('a').attr('href')
 
-        request(postPodcast, function(err, res, body) {
-            if (err) console.log(`Erro: ${err}`)
-
-            var $ = cheerio.load(body)
-
-            var tituloPodcast = $('.entry-title').first().text()
-
-            var descPodcast = $('.entry-content p').first().text()
-
-            var linkPodcast = $('.powerpress_links_mp3').first().find("a").first().attr('href')
-
+    const itens = promises.map(async (p) => {
+        return await p.then((body) => {
+            let $ = cheerio.load(body)
+            let tituloPodcast = $('.entry-title').first().text()
+            let descPodcast = $('.entry-content p').first().text()
+            let linkPodcast = $('.powerpress_links_mp3').first().find("a").first().attr('href')
             objPodcast = {
                 "titulo": tituloPodcast,
                 "descricao": descPodcast,
                 "link": linkPodcast
             }
-
             arrayResponse.push(objPodcast)
-
-
-        }).then((res) => {
-            console.log(arrayResponse);
-        })
-
-        // console.log(arrayResponse);
-
-    })
-
-    // fs.appendFile('podcasts.json', JSON.stringify(arrayResponse))
-
-    // $('.herald-posts article').each(function(){
-
-    //     var postPodcast = $(this).find('a').attr('href')
-
-    //     request(postPodcast, function(err, res, body) {
-    //         if (err) console.log(`Erro: ${err}`)
-
-    //         var $ = cheerio.load(body)
-
-    //         var tituloPodcast = $('.entry-title').first().text()
-
-    //         var tituloPodcast = $('.entry-title').first().text()
-
-    //         console.log(`Titulo: ${tituloPodcast}`)
-
-    //     })
-
-    //     //
+            return objPodcast
+        }
+    )})
+    const podcastObjects = await Promise.all(itens)
+    console.log(podcastObjects)
 })
